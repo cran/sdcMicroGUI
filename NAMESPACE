@@ -1,1 +1,2 @@
-export(sdcGUI)
+export(plot.indivRisk,sdcGUI)
+S3method(plot, indivRisk)

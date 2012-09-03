@@ -14,7 +14,8 @@
 		#						paste("Matthias Templ",
 		#								" (2009). A Graphical User Interface for Microdata Protection Which Provides Reproducibility and Interactions: the sdcMicro GUI. Transactions on Data Privacy, 2(3),207-224 ",
 		#								".", sep="")))
-	cat("\n--------\n")
-	cat("you may start the graphical user interface by running 'sdcGUI()'\n")
+  packageStartupMessage("\n--------\n")
+  packageStartupMessage("you may start the graphical user interface by running 'sdcGUI()'\n")
+  #sdcGUI()
 }
 
