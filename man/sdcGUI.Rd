@@ -22,7 +22,7 @@ is provided also when using this GUI instead of the CLI version.
 
 It is programmed based on the gWidgetsRGtk2 and RGtk2 package.
 }
-\author{ Thomas Petelin, Matthias Templ }
+\author{ Thomas Petelin, Matthias Templ, Alexander Kowarik }
 \examples{
 ##sdcGUI()
 }

@@ -1,8 +1,10 @@
-e6176f54e46803a3a1a2bed9c07ac026 *DESCRIPTION
-eb89bd8394cf6cf8ab4c8a0543b2c210 *NAMESPACE
+9b4bbbd7f54ac47c5b4adf5f598a10ce *DESCRIPTION
+583377fe82af9e6c056ef90ce749b747 *NAMESPACE
+d7fbc6f72125fb9dff852ee9f94d7d1a *R/aux_functions.R
 b170add9732aa43bf22b80905afe319d *R/plot.indivRisk.r
-5a2d39eb5d10f3aed1ffb8970904f7b2 *R/sdcGUI.r
-f297e8873b45b668d47c76d68297d8bd *R/zzz.r
+31d9a40c7a1424a35cfadb830e7c07a3 *R/sdcGUI.r
+2d4d74fdbebc49a32407e67c7d17e69b *R/zzz.r
 1409b9b0e0590be4df8fb7456329f55f *inst/CITATION
 a4fee5298f9a76d6c6cf1d2d3bd03aba *man/plot.indivRisk.Rd
-3770c29fcbb042e5cb960a28bf9b9800 *man/sdcGUI.Rd
+f83d8618ea26a263a8e85e06029118db *man/sdcGUI.Rd
+488be264ec41656aabd49c6b6f361339 *man/sdcGUIoutput.Rd
