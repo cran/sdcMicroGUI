@@ -1,8 +1,8 @@
-9b4bbbd7f54ac47c5b4adf5f598a10ce *DESCRIPTION
+17c40d01dd8608bca8985e1c06fc18f0 *DESCRIPTION
 583377fe82af9e6c056ef90ce749b747 *NAMESPACE
-d7fbc6f72125fb9dff852ee9f94d7d1a *R/aux_functions.R
+490fccf228f1692e9547be9b54242a21 *R/aux_functions.R
 b170add9732aa43bf22b80905afe319d *R/plot.indivRisk.r
-31d9a40c7a1424a35cfadb830e7c07a3 *R/sdcGUI.r
+230ea95f1c6628eafaef3b5b5c78b154 *R/sdcGUI.r
 2d4d74fdbebc49a32407e67c7d17e69b *R/zzz.r
 1409b9b0e0590be4df8fb7456329f55f *inst/CITATION
 a4fee5298f9a76d6c6cf1d2d3bd03aba *man/plot.indivRisk.Rd

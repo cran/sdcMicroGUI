@@ -127,21 +127,21 @@ printFrequenciesComp <- function(obj){
   cat("Number of observations violating\n")
   cat("\n -  2-anonymity:  ")
   cat(paste(sum(obj@risk$individual[,2]<2),
-				  "(orig: ",sum(obj@originalRisk$individual[,2]<2),")\n"))
+          "(orig: ",sum(obj@originalRisk$individual[,2]<2),")\n"))
   cat(" -  3-anonymity:  ")
   cat(paste(sum(obj@risk$individual[,2]<3),
-				  "(orig: ",sum(obj@originalRisk$individual[,2]<3),")"))
+          "(orig: ",sum(obj@originalRisk$individual[,2]<3),")"))
 #  cat(paste(sum(obj@originalRisk$individual[,2]<2), "obs. violate 2-anonymity \n"))
 #  cat(paste(sum(obj@originalRisk$individual[,2]<3), "obs. violate 3-anonymity \n"))
   cat("\n--------------------------\n")  
   n <- nrow(obj@origData)
-	cat("\nPercentage of observations violating\n")
-	cat(" -  2-anonymity:  ")
-	cat(paste(round(sum(obj@risk$individual[,2]<2)/n*100,2),"% ",
-					"(orig: ",round(sum(obj@originalRisk$individual[,2]<2)/n*100,2),"%",")\n"))
-	cat(" -  3-anonymity:  ")
-	cat(paste(round(sum(obj@risk$individual[,2]<3)/n*100,2),"% ",
-					"(orig: ",round(sum(obj@originalRisk$individual[,2]<3)/n*100,2),"%",")"))
+  cat("\nPercentage of observations violating\n")
+  cat(" -  2-anonymity:  ")
+  cat(paste(round(sum(obj@risk$individual[,2]<2)/n*100,2),"% ",
+          "(orig: ",round(sum(obj@originalRisk$individual[,2]<2)/n*100,2),"%",")\n"))
+  cat(" -  3-anonymity:  ")
+  cat(paste(round(sum(obj@risk$individual[,2]<3)/n*100,2),"% ",
+          "(orig: ",round(sum(obj@originalRisk$individual[,2]<3)/n*100,2),"%",")"))
 }
 printMeasure_risk <- function(obj){
   risk <- obj@risk
@@ -181,21 +181,21 @@ printRecode <- function(obj){
   for(i in 1:k){
     tab2[i] <- length(unique(obj@origData[,obj@keyVars[i]]))
     tab[i] <- length(unique(obj@manipKeyVars[,i]))
-	t2 <- table(obj@origData[,obj@keyVars[i]])
-	t1 <- table(obj@manipKeyVars[,i])
-	msize[i] <- round(mean(t1),0)
-	msize2[i] <- round(mean(t2),0)
-	ssize[i] <- min(t1)
-	ssize2[i] <- min(t2)
+    t2 <- table(obj@origData[,obj@keyVars[i]])
+    t1 <- table(obj@manipKeyVars[,i])
+    msize[i] <- round(mean(t1),0)
+    msize2[i] <- round(mean(t2),0)
+    ssize[i] <- min(t1)
+    ssize2[i] <- min(t2)
   }
   nc <- sapply(names(tab), nchar)
   maxnam <- max(nc)
   for(i in 1:k){
 #	  cat(names(tab)[i],":",tab[i]," (orig:", tab2[i],"), ms:", msize[i], "(orig:",msize2[i],") \n")
-     nam <- names(tab)[i]
-	    cat("-------------\n")
-		cat(nam, paste(rep(".",2+maxnam-nchar(nam)), collapse=""),tab[i],"|",msize[i],"|",ssize[i], 
-          "\n     (orig:", tab2[i],"|",msize2[i],"|",ssize2[i],") \n")
+    nam <- names(tab)[i]
+    cat("-------------\n")
+    cat(nam, paste(rep(".",2+maxnam-nchar(nam)), collapse=""),tab[i],"|",msize[i],"|",ssize[i], 
+        "\n     (orig:", tab2[i],"|",msize2[i],"|",ssize2[i],") \n")
   }
 }
 printMeasure_riskComp <- function(obj){
@@ -209,7 +209,7 @@ printMeasure_riskComp <- function(obj){
   cat(paste(s," (orig:", sorig, ")","obs. with higher risk than the main part\n"))
   cat("Expected no. of re-identifications:\n",round(risk$global$risk_ER,2),"")
   cat("[",round(risk$global$risk_pct,2),"%]  (orig:", round(originalRisk$global$risk_ER,2), 
-		  "[",round(originalRisk$global$risk_pct,2),"%])\n")
+      "[",round(originalRisk$global$risk_pct,2),"%])\n")
 #  if(is.na(risk$global$threshold))
 #    risk$global$threshold <- Inf
   #cat("Threshold:",round(risk$global$threshold,2),"\n (for maximal global risk",round(risk$global$max_risk,2),")\n")
@@ -219,11 +219,11 @@ printMeasure_riskComp <- function(obj){
       cat("--------------------------\n")
       cat("Hierarchical risk \n")
       cat("--------------------------\n")
-	  cat("Expected no. of re-identifications:\n",
-			  round(risk$global$hier_risk_ER,2),"")
-	  cat("[",round(risk$global$hier_risk_pct,2),"%]  (orig:", 
-			  round(originalRisk$global$hier_risk_ER,2), 
-			  "[",round(originalRisk$global$hier_risk_pct,2),"%])\n")
+      cat("Expected no. of re-identifications:\n",
+          round(risk$global$hier_risk_ER,2),"")
+      cat("[",round(risk$global$hier_risk_pct,2),"%]  (orig:", 
+          round(originalRisk$global$hier_risk_ER,2), 
+          "[",round(originalRisk$global$hier_risk_pct,2),"%])\n")
     }else{
       cat("--------------------------\n")
       cat("Hierarchical risk not available\n")
@@ -255,7 +255,7 @@ printMeasure_riskComp <- function(obj){
 #      cat("--------------------------\n")
 #    }
 #  }
-
+  
 }
 
 printLocalSuppression <- function(obj){
@@ -266,38 +266,52 @@ printLocalSuppression <- function(obj){
   else
     lsup <- obj@localSuppression
   for(i in 1:length(keyVars)){
-	nam <- keyVars[i]
-	n <- nrow(obj@origData)
+    nam <- keyVars[i]
+    n <- nrow(obj@origData)
     cat("\n")
-	cat(keyVars[i],paste(rep(".",2+maxnam-nchar(nam)), collapse=""),lsup[[1]][i])
-	cat(" [", round(100*lsup[[1]][i]/n,3), "%]")
+    cat(keyVars[i],paste(rep(".",2+maxnam-nchar(nam)), collapse=""),lsup[[1]][i])
+    cat(" [", round(100*lsup[[1]][i]/n,3), "%]")
   }
 }
 
 
 updates2 <- function(restart=FALSE){
-  oldP <- old.packages()
-  oldP <- oldP[oldP[,1]%in%c("sdcMicro","sdcMicroGUI"),,drop=FALSE]
-  if(nrow(oldP)!=0){
-    text <- paste("Updates found for the following packages: ",paste(oldP[,1],collapse="\n ",sep=""),"\n Click OK for updating (GUI will be restarted).",sep="")
-  }else{
-    text <- "No updates available."
+  options(timeout=5)
+  xt <- try(download.file(url="http://cran.r-project.org/",destfile=tempfile(),quiet=TRUE))
+  INET <- TRUE
+  if(class(xt)=="try-error"){
+    INET <- FALSE
   }
-  if(text=="No updates available."&&!restart){
-    return(0)
-  }
-  ns_do <- gconfirm(text, title="Package Updates",icon="warning")
-  if( ns_do &&substr(text,1,1)!="N") {
-    loaded <- oldP[oldP[,1]%in%loadedNamespaces(),1]
-    for(ll in loaded){
-      if(length(which(search()==paste("package:",ll,sep="")))>0)
-        detach(pos=which(search()==paste("package:",ll,sep="")),unload=TRUE,force=TRUE)
+  if(INET){
+    oldP <- old.packages()
+    if(!is.null(oldP)){
+      oldP <- oldP[oldP[,1]%in%c("sdcMicro","sdcMicroGUI"),,drop=FALSE]  
+    }else{
+      oldP <- data.frame()
     }
-    update.packages(oldPkgs=oldP,ask=FALSE)
-    for(ll in loaded)
-      require(ll,character.only=TRUE)
     
-    if(restart)
-      sdcGUI()
-  }
+    if(nrow(oldP)!=0){
+      text <- paste("Updates found for the following packages: ",paste(oldP[,1],collapse="\n ",sep=""),"\n Click OK for updating (GUI will be restarted).",sep="")
+    }else{
+      text <- "No updates available."
+    }
+    if(text=="No updates available."&&!restart){
+      return(0)
+    }
+    ns_do <- gconfirm(text, title="Package Updates",icon="warning")
+    if( ns_do &&substr(text,1,1)!="N") {
+      loaded <- oldP[oldP[,1]%in%loadedNamespaces(),1]
+      for(ll in loaded){
+        if(length(which(search()==paste("package:",ll,sep="")))>0)
+          detach(pos=which(search()==paste("package:",ll,sep="")),unload=TRUE,force=TRUE)
+      }
+      update.packages(oldPkgs=oldP,ask=FALSE)
+      for(ll in loaded)
+        require(ll,character.only=TRUE)
+      
+      if(restart)
+        sdcGUI()
+    }
+  }else
+    gmessage("It is not possible to check for possible updates at the moment.", title="No internet connection",icon="warning")
 }

@@ -203,12 +203,12 @@ sdcGUI <- function() {
     nV <- ActiveSdcVars("manipNumVars")
     orig <- orig[,!colnames(orig)%in%c(colnames(kV),colnames(nV)),drop=FALSE]
     d <- orig
-    if(!is.null(kV))
-      d <- cbind(kV,orig)
     if(!is.null(nV))
-      d <- cbind(nV,orig)
+      d <- cbind(nV,d)
+    if(!is.null(kV))
+      d <- cbind(kV,d)
     xtmp <- cbind(fk[rko],rk[rko],d[rko,])
-    colnames(xtmp) <- c("fk","risk",colnames(kV),colnames(nV),colnames(orig))
+    colnames(xtmp) <- c("fk","risk",colnames(d))
     xtmp <- xtmp[order(xtmp[,2],decreasing=TRUE),]
     win = gwindow("Observations with highest risk", parent=window)
     mainGroup1 = ggroup(container=win, horizontal=FALSE)
@@ -1752,8 +1752,10 @@ sdcGUI <- function() {
     wVars <- ActiveSdcVarsStr("weightVar")
     sVars <- ActiveSdcVarsStr("strataVar")
     hVars <- ActiveSdcVarsStr("hhId")
-    allVars <- colnames(ActiveSdcObject()@origData)
+    o <- ActiveSdcObject()@origData
+    allVars <- colnames(o)
     allVars <- allVars[!allVars%in%c(keyVars,numVars,wVars,sVars,hVars)]
+    allVars <- allVars[apply(o[,allVars],2,function(x)!all(is.na(x)))]
     varTab = gtable(data.frame(vars=allVars, stringsAsFactors=FALSE), multiple=TRUE)
     size(varTab) <- c(120,200)
     add(tmp, varTab)
@@ -2728,9 +2730,11 @@ writeVars <- function(t1,t2,t3,t4,t5){
           tryCatch({testimport <- getd("dframe")
                 if(getd("changedTypes")==TRUE){
                   colclasses <- getd("colclasses")
+                  colclassesSTR <- parseVarStr(colclasses)
                 }  
                 else{
                   colclasses <- NA
+                  colclassesSTR <- "NA"
                 }
                 wd <- WaitingDialog(Parent=importDialog)
                 focus(wd) <- TRUE
@@ -2759,7 +2763,7 @@ writeVars <- function(t1,t2,t3,t4,t5){
                     ",dec=",parseVarStr(svalue(csvdecimal)),
                     ",quote=\"\\",svalue(csvquotes),"\"",
                     ",skip=",parseVarStr(svalue(csvskip)),
-                    ",colClasses=",parseVarStr(colclasses),
+                    ",colClasses=",colclassesSTR,
                     ",na.strings=",parseVarStr(svalue(strsplit(svalue(csvnastrings),",")[[1]])),
                     ")", sep="")
                 putd("cmdimp",cmdimp)
@@ -2908,7 +2912,7 @@ writeVars <- function(t1,t2,t3,t4,t5){
       
       #record export
       frame.html <- gframe("HTML report")
-      radio.html <- gradio(c("none", "short report", "extended report"), 
+      radio.html <- gradio(c("none", "Full report (for internal use)","Short report (for external use)"), 
           horizontal=TRUE, container=frame.html)
       
       
@@ -2934,7 +2938,7 @@ writeVars <- function(t1,t2,t3,t4,t5){
       #add(importDialogFrame, statusbar)
       
     }
-    
+    buttonHandler()
   }
   
   # Data - Import - Import SPSS
@@ -3086,7 +3090,7 @@ writeVars <- function(t1,t2,t3,t4,t5){
       
       #record export
       frame.html <- gframe("HTML report")
-      radio.html <- gradio(c("none", "short report", "extended report"), 
+      radio.html <- gradio(c("none", "Full report (for internal use)","Short report (for external use)"), 
           horizontal=TRUE, container=frame.html)
       
       fdata <- gframe("Choose Data-File (Contains exported data as freetext):")
@@ -3236,7 +3240,7 @@ writeVars <- function(t1,t2,t3,t4,t5){
       
       #record export
       frame.html <- gframe("HTML report")
-      radio.html <- gradio(c("none", "short report", "extended report"), 
+      radio.html <- gradio(c("none", "Full report (for internal use)","Short report (for external use)"), 
           horizontal=TRUE, container=frame.html)
       
       ftop <- gframe("Choose STATA-File:")
@@ -3394,7 +3398,7 @@ writeVars <- function(t1,t2,t3,t4,t5){
       
       #record export
       frame.html <- gframe("HTML report")
-      radio.html <- gradio(c("none", "short report", "extended report"), 
+      radio.html <- gradio(c("none", "Full report (for internal use)","Short report (for external use)"), 
           horizontal=TRUE, container=frame.html)
       
       fdata <- gframe("Choose Data-File (Contains exported data as freetext):")
@@ -3427,18 +3431,28 @@ writeVars <- function(t1,t2,t3,t4,t5){
   }
   
   #outdir is the name of the exported data file from the different export dialogs
-  exportReport <- function(version=NULL){
-    exportFileName <- getd("exportFileName")
-    #remove the filename to get the output directory for the html report
-    outdir <- dirname(exportFileName)
-    
-    hr <- version
-    if(!version==1){
-      if(version==2) hr<- "short"
-      else hr <- "extended"
-      obj <- ActiveSdcObject()
-      obj@options$cmd <- getd("activeScript")$cmd
-      report(obj, outdir=outdir, version=hr)
+  exportReport <- function(version=2){
+    if(existd("sdcObject")){
+      if(existd("exportFileName")){
+        exportFileName <- getd("exportFileName")
+      }else{
+        exportFileName <- gfile("Select file to save report to", parent=window, type="save" ,filter=list("HTML"=list(patterns=c("*.html", "*.htm")), "All files" = list(patterns = c("*"))))
+      }
+      outdir <- dirname(exportFileName)
+      filename <- strsplit(basename(exportFileName),"\\.")[[1]][1]
+      #remove the filename to get the output directory for the html report
+      
+      if(!version==1){
+        obj <- ActiveSdcObject()
+        obj@options$cmd <- getd("activeScript")$cmd
+        if(version==2)
+          internal <- TRUE
+        else 
+          internal <- FALSE
+        report(obj, outdir=outdir,filename=filename,internal=internal)
+      }
+    }else{
+      gmessage("No sdc object found to generate report.", title="Information", icon="warning", parent=window)
     }
   }
   
@@ -3657,6 +3671,8 @@ writeVars <- function(t1,t2,t3,t4,t5){
   mbar$Data$Export$"Export SPSS"$handler = exportSPSS
   mbar$Data$Export$"Export SAS"$handler = exportSAS
   mbar$Data$Export$"Export STATA"$handler = exportSTATA
+  mbar$Data$"Generate Report"$"Full report (for internal use)"$handler=function(...)exportReport(version=2)
+  mbar$Data$"Generate Report"$"Short report (for external use)"$handler=function(...)exportReport(version=3)
   #mbar$Script$"New"$handler = newScript
   mbar$Script$"Import"$handler = loadScript
   mbar$Script$"Export"$handler = saveScript
