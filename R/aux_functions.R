@@ -16,17 +16,7 @@ sdcGUIenv <- new.env()
 sdcGUIoutput <- function(){
   if(existd("sdcObject")){
     sdc <- ActiveSdcObject()
-    o <- sdc@origData
-    k <- sdc@manipKeyVars
-    n <- sdc@manipNumVars
-    s <- sdc@manipStrataVar
-    if(!is.null(k))
-      o[,colnames(k)] <- k
-    if(!is.null(n))
-      o[,colnames(n)] <- n
-    if(!is.null(s))
-      o$sdcGUI_strataVar <- s
-    return(o)
+    return(extractManipData(sdc))
   }else
     stop("There is no object from the sdcGUI to retrieve.")
 }
@@ -46,7 +36,9 @@ getd <- function(x, mode="any") {
 existd <- function(x, mode="any") {
   exists(x, envir=sdcGUIenv, mode=mode, inherits=FALSE) # add () to sdcGUIenv
 }
-
+listd <- function(x){
+  ls(envir=sdcGUIenv)
+}
 ActiveDataSet <- function(name) {
   if( missing(name) ) {
     getd("activeDataSet")

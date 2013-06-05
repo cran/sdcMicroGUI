@@ -158,7 +158,7 @@ sdcGUI <- function() {
       if(!is.null(nV))
         d <- cbind(nV,orig)
       xtmp <- cbind(fk[TFfk],d[TFfk,])
-      colnames(xtmp) <- c("fk",colnames(kV),colnames(nV),colnames(orig))
+      colnames(xtmp)[1] <- c("fk")
       xtmp <- xtmp[order(xtmp[,1]),]
       win = gwindow("Observations violating 3-anoymity", parent=window)
       mainGroup1 = ggroup(container=win, horizontal=FALSE)
@@ -184,7 +184,8 @@ sdcGUI <- function() {
       if(!is.null(nV))
         d <- cbind(nV,orig)
       xtmp <- cbind(ldiv[TFfk,],fk[TFfk],d[TFfk,])
-      colnames(xtmp) <- c(colnames(ldiv),"fk",colnames(kV),colnames(nV),colnames(orig))
+      colnames(xtmp)[1:ncol(ldiv)] <- colnames(ldiv)
+      colnames(xtmp)[ncol(ldiv)+1] <- "fk"
       xtmp <- xtmp[order(xtmp[,1]),]
       win = gwindow("Observations violating 2 l-diversity", parent=window)
       mainGroup1 = ggroup(container=win, horizontal=FALSE)
@@ -1555,7 +1556,7 @@ sdcGUI <- function() {
       tmpGroupFac2 = gframe("Levels", container=tmpGroupFac)
       facTab[[i]] <-  gtable(data.frame(levels=character(0), stringsAsFactors=FALSE),
           multiple=TRUE)
-      size(facTab[[i]]) <- c(120,150)
+      size(facTab[[i]]) <- c(120,400)
       add(tmpGroupFac2, facTab[[i]])
       btmp = ggroup(container=tmpGroupFac2, horizontal=FALSE, expand=TRUE)
       renameFacVarFun[[i]] <- eval(parse(text=paste('
@@ -3477,14 +3478,16 @@ writeVars <- function(t1,t2,t3,t4,t5){
   saveScript <- function(...) {
     saveScriptToFile <- function(fileName, ...) {
       cmdtmp <- Script()$cmd
-      if(length(grep("\\.",fileName))==0)
+      if(length(grep("sdcMicroScript",fileName))==0)
         fileName <- paste(fileName,".sdcMicroScript", sep="")
       fo <- file(fileName)
       writeLines(cmdtmp,fo)
       close(fo)
     }
     if( existd("activeScript") ) {
-      xname <- gfile("Select file to save Script", type="save", parent=window)
+      xname <- gfile("Select file to save Script", type="save", parent=window,
+          filter=list("Script files" = list(patterns = c("*.sdcMicroScript")),"All files" = list(patterns = c("*.*"))))
+      
       if( xname != "" ) {
         saveScriptToFile(xname)
       }
@@ -3498,7 +3501,9 @@ writeVars <- function(t1,t2,t3,t4,t5){
   loadScript <- function(...) {
     # open file browser and load the needed script
     xname <- gfile("Select script file to open.", parent=window, type="open", 
-        filter=list("Script files" = list(patterns = c("*.sdcMicroScript"))) )
+        filter=
+            
+            list("Script files" = list(patterns = c("*.sdcMicroScript")),"All files" = list(patterns = c("*.*")))) 
     if( xname != '' ) {
       fo <- file(xname)
       cmdtmp <- list(cmd=readLines(fo))
@@ -3595,36 +3600,29 @@ writeVars <- function(t1,t2,t3,t4,t5){
   }
   OneStepBack <- function(...) {
     if(existd("sdcObject")){
-      acs <- getd("activeScript")$cmd
-      cmd <- acs[[length(acs)]]
-      val <- gconfirm(paste("Do you really want to undo the last command:\n",cmd,sep=""), parent=window)
-      if( as.logical(val) ) {
-        putd("activeScript",list(cmd=acs[-length(acs)]))
-        ActiveSdcObject(undolast(ActiveSdcObject()))
-        freqCalcIndivRisk()
-        nm_risk_print_function()
-      }
-    }else{
+      if(!is.null(getd("sdcObject")@prev)){
+        acs <- getd("activeScript")$cmd
+        cmd <- acs[[length(acs)]]
+        val <- gconfirm(paste("Do you really want to undo the last command:\n",cmd,sep=""), parent=window)
+        if( as.logical(val) ) {
+          putd("activeScript",list(cmd=acs[-length(acs)]))
+          ActiveSdcObject(undolast(ActiveSdcObject()))
+          freqCalcIndivRisk()
+          nm_risk_print_function()
+        }
+      }else
+        gmessage("Undo is not possible, because no previous sdc object was found.", title="Attention", icon="error", parent=window)
+  }else
       gmessage("Undo is not possible, because no active sdc object was found.", title="Attention", icon="error", parent=window)
-    }
   }
   restartGUI <- function(...) {
-    val <- gconfirm("Do you really want to close the window?", parent=window)
-    if( as.logical(val) ){ 
-      objects <- c("activeDataSet", "activeScript", "breaksInput", "dataSetName", 
-          "facTab", "fc_print", "ffc_print", "firstRun", "FreqT", "gdev", 
-          "gr1_window", "gr3_windowButton1", "gr3_windowButton2", "hLen", 
-          "importFileName", "keyLen", "labelsInput", "mosdev", "numLen", 
-          "oldDataSet", "rb", "sdcObject", "sLen", "SummaryTab", "wLen"
-      )
-      for(o in objects){
-        if(existd(o))
-          rmd(o)
-      }
-      
+    val <- gconfirm("Do you really want to delete everything and restart the GUI?", parent=window)
+    if( as.logical(val) ) {
       dispose(window)
+      #rm(list=ls())
+      rmd(listd())
+      sdcGUI()
     }
-    sdcGUI()
   }
   
   ## initialize
@@ -3690,7 +3688,7 @@ writeVars <- function(t1,t2,t3,t4,t5){
   mbar$Help$"GUI-index"$"Shuffling"$handler=function(...)helpR("shuffle")
   mbar$Help$"GUI-index"$"Data Utility (continuous)"$handler=function(...)helpR("dUtility")
   mbar$Help$"Package Index"$handler = paind
-  mbar$Undo$handler=OneStepBack
+  mbar$Undo$"Undo last action"$handler=OneStepBack
   
   
   ## layout
