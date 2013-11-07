@@ -1,6 +1,6 @@
-6c6b8521dec0ecffde626b0125c87dba *DESCRIPTION
+2c63cd7e231b2c14cf4f4447366065c8 *DESCRIPTION
 f9c33a8e30c8777f5bce55245c0d4c7c *NAMESPACE
-e4e04e1bc13896dff90b00d99999396a *NEWS
+55054afd958a5d96c42d53d9079a037f *NEWS
 49100496c1c627d129537be754520b88 *R/HelpHelperFunctions.R
 524ae64c4babfcd0468f410b7cdb0c8a *R/aux_functions.R
 b170add9732aa43bf22b80905afe319d *R/plot.indivRisk.r
@@ -8,7 +8,7 @@ b170add9732aa43bf22b80905afe319d *R/plot.indivRisk.r
 3c5b3da7d20462b703c1e2df9255d581 *R/zzz.r
 fc5fd39c5f53daabeb5fa3289bd69ae7 *README.md
 b16daa5e4faae5b586bf3dd111f8be90 *build/vignette.rds
-d08c14cdde7fc963f29a648921b236ce *inst/doc/gui_tutorial.pdf
+c7701896bf6cc9201d84630cc4873be2 *inst/doc/gui_tutorial.pdf
 7c8855ca8709e65018e3ae480e79b9b6 *inst/doc/gui_tutorial.rnw
 a4fee5298f9a76d6c6cf1d2d3bd03aba *man/plot.indivRisk.Rd
 f83d8618ea26a263a8e85e06029118db *man/sdcGUI.Rd
