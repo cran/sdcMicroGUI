@@ -103,7 +103,8 @@ sdcGUI <- function() {
   Script.new <- function(...) {
     xtmp <- list(cmd=c())
     putd("activeScript", xtmp)
-    cmd.seed <- paste("set.seed(",round(runif(1)*10e5),")")
+    cmd.seed <- paste(paste("set.seed(",round(runif(1)*10e5),")"),
+    paste("# sdcMicro:",packageVersion("sdcMicro"),", sdcMicroGUI",packageVersion("sdcMicroGUI")))
     eval(parse(text=cmd.seed))
     Script.add(cmd.seed)
   }
@@ -115,32 +116,34 @@ sdcGUI <- function() {
   }
   
   Script.run <- function(xscr, ...) {
-    #if( existd("activeDataSet") ) {
-    if( TRUE ) {
-      if( missing(xscr) ) {
-        xcmd <- Script()
-        xcmd <- xcmd$cmd
-      } else {
-        xcmd <- xscr
-      }
-      xprogress = gwindow("please wait", width=180, height=40, parent=window)
-      glabel("... script running ...", container=xprogress)
-      activedataset <- ""
-      sdcObject <- ""
-      for( i in 1:length(xcmd) ) {
-        eval(parse(text=xcmd[i]))
-        #xtmp <- function() { eval(parse(text=ytmp)) }
-        #do.call(xtmp, list(), envir=sdcGUIenv)
-      }
-      putd("activeDataSet", activedataset)
-      putd("dataSetName", "activedataset")
-      ActiveSdcObject(sdcObject)
-      writeVars(ActiveSdcVarsStr("keyVars"),ActiveSdcVarsStr("numVars"), ActiveSdcVarsStr("weightVar"),
-          ActiveSdcVarsStr("hhId"),ActiveSdcVarsStr("strataVar"))
-      dispose(xprogress)
+    if( missing(xscr) ) {
+      xcmd <- Script()
+      xcmd <- xcmd$cmd
     } else {
-      gmessage("Run not possible, because no active data set found.", title="Attention", icon="error", parent=window)
+      xcmd <- xscr
     }
+    xprogress = gwindow("please wait", width=180, height=40, parent=window)
+    glabel("... script running ...", container=xprogress)
+    activedataset <- ""
+    sdcObject <- ""
+    for( i in 1:length(xcmd) ) {
+      trycatch <- try(eval(parse(text=xcmd[i])))
+      if(class(trycatch)=="try-error"){
+        dispose(xprogress)
+        msg <- paste("Running the script was not possible due to the following error:\n",attributes(trycatch)$condition$message)
+        gmessage(msg, title="Attention", icon="error", parent=window)
+        rmd(listd()) # cleans up the Environment
+        stop(msg)
+      }
+      #xtmp <- function() { eval(parse(text=ytmp)) }
+      #do.call(xtmp, list(), envir=sdcGUIenv)
+    }
+    putd("activeDataSet", activedataset)
+    putd("dataSetName", "activedataset")
+    ActiveSdcObject(sdcObject)
+    writeVars(ActiveSdcVarsStr("keyVars"),ActiveSdcVarsStr("numVars"), ActiveSdcVarsStr("weightVar"),
+        ActiveSdcVarsStr("hhId"),ActiveSdcVarsStr("strataVar"))
+    dispose(xprogress)
   }
   
   
@@ -230,12 +233,12 @@ sdcGUI <- function() {
     fk <-  m1$individual[,2]
     if(is.na(mu))
       mu <- quantile(rk,.9, na.rm=TRUE)
-    sd <- 1/length(rk) * (sum(fk[rk < mu] * rk[rk < mu]) + mu*sum(fk[rk>mu])) * 100
+#    sd <- 1/length(rk) * (sum(fk[rk < mu] * rk[rk < mu]) + mu*sum(fk[rk>mu])) * 100
     s2 <- length(which(rk > mu))
     mu.old <- mu
-    sd.old <- sd
+#    sd.old <- sd
     s2.old <- s2
-    maxsd <- 1/length(rk) * (sum(fk * rk)) *100
+#    maxsd <- 1/length(rk) * (sum(fk * rk)) *100
     knames <- ActiveSdcVarsStr()
     n1 <- knames[1]    ## next, the plot of column names of keys
     if( length(knames) > 1 ){
@@ -246,29 +249,29 @@ sdcGUI <- function() {
     norm.refresh <- function(...) {
       method = getd("method")
       mu <- as.numeric(evalq(svalue(smu)))
-      sd <- as.numeric(evalq(svalue(ssd)))
+#      sd <- as.numeric(evalq(svalue(ssd)))
       s2 <- as.numeric(evalq(svalue(ss2)))
       if (mu != mu.old) {
         s2 <- round(length(which(rk > mu)))
-        sd <- 1/length(rk) * (sum(fk[rk < mu] * rk[rk < mu]) + mu*sum(fk[rk>mu])) * 100
-        try(svalue(ssd)<-sd)
+#        sd <- 1/length(rk) * (sum(fk[rk < mu] * rk[rk < mu]) + mu*sum(fk[rk>mu])) * 100
+#        try(svalue(ssd)<-sd)
         try(svalue(ss2)<-s2)
-        sd.old <<- sd
+#        sd.old <<- sd
         s2.old <<- s2
       }
-      if (sd != sd.old) {
-        sd <- as.numeric(evalq(tclvalue(s2)))#, envir = slider.env))
-        s2 <- length(which(rk > mu))
-        try(svalue(ssd)<-sd)
-        try(svalue(ss2)<-s2)
-        sd.old <<- sd
-        s2.old <<- s2
-      }
+#      if (sd != sd.old) {
+#        sd <- as.numeric(evalq(tclvalue(s2)))#, envir = slider.env))
+#        s2 <- length(which(rk > mu))
+#        try(svalue(ssd)<-sd)
+#        try(svalue(ss2)<-s2)
+#        sd.old <<- sd
+#        s2.old <<- s2
+#      }
       if (s2 != s2.old) {
         s2 <- as.numeric(evalq(tclvalue(s2)))#, envir = slider.env))
-        sd <- 1/length(rk) * (sum(fk * rk) + 0.02*sum(fk))
-        try(svalue(ssd)<-sd)
-        sd.old <<- sd
+#        sd <- 1/length(rk) * (sum(fk * rk) + 0.02*sum(fk))
+#        try(svalue(ssd)<-sd)
+#        sd.old <<- sd
         s2.old <<- length(which(rk > mu))
       }
       if( method == "histogram" ){
@@ -302,12 +305,12 @@ sdcGUI <- function() {
     tostart <- round(max(rk)/0.001)*0.001+0.001
     smu = gslider(from=0, to=tostart, by=0.001, value=mustart, handler=norm.refresh)
     add(tmp, smu, expand=TRUE)
-    tmp = gframe('<span weight="bold" size="medium">Re-identification Rate</span>',
-        container=sliderGroup,markup=TRUE)
-    sdstart <- round(sd/0.01)*0.01
-    to2start=round(maxsd/0.01)*0.01+0.01
-    ssd = gslider(from=0, to=to2start, by=0.01, value=sdstart, handler=norm.refresh)
-    add(tmp, ssd, expand=TRUE)
+#    tmp = gframe('<span weight="bold" size="medium">Re-identification Rate</span>',
+#        container=sliderGroup,markup=TRUE)
+#    sdstart <- round(sd/0.01)*0.01
+#    to2start=round(maxsd/0.01)*0.01+0.01
+#    ssd = gslider(from=0, to=to2start, by=0.01, value=sdstart, handler=norm.refresh)
+#    add(tmp, ssd, expand=TRUE)
     tmp = gframe('<span weight="bold" size="medium">Unsafe Records</span>',
         container=sliderGroup,markup=TRUE)
     s2start <- round(s2)
@@ -417,15 +420,15 @@ sdcGUI <- function() {
     glabel("... script running ...", container=xprogress)
     if(length(strata_var)>0){
       strata_var <- parseVarStr(strata_var)
-      Script.add(paste("sdcObject <- pram_strata(sdcObject,variables=", 
+      Script.add(paste("sdcObject <- pram(sdcObject,variables=", 
               parseVarStr(var),",strata_variables=",strata_var, 
               "",")", sep="")) 
-      ActiveSdcObject(pram_strata(ActiveSdcObject(),variables=var,strata_variables=strata_var))
+      ActiveSdcObject(pram(ActiveSdcObject(),variables=var,strata_variables=strata_var))
     }else{
       strata_var <- parseVarStr(strata_var)
-      Script.add(paste("sdcObject <- pram_strata(sdcObject,variables=", 
+      Script.add(paste("sdcObject <- pram(sdcObject,variables=", 
               parseVarStr(var),"",")", sep="")) 
-      ActiveSdcObject(pram_strata(ActiveSdcObject(),variables=var))
+      ActiveSdcObject(pram(ActiveSdcObject(),variables=var))
     } 
     freqCalcIndivRisk()
     dispose(xprogress)
@@ -1337,7 +1340,7 @@ sdcGUI <- function() {
         }
         newName <- ginput("Please enter a new level name.", text=levName, parent=gr1_window)
         if( !is.na(newName) ) {
-          groupVars_tmp(v, h, newName)
+          groupVars_tmp(v, h, rep(newName,length(h)))
           showLevels(v)
           updateSummary(v)
         }
@@ -1350,26 +1353,32 @@ sdcGUI <- function() {
           #gr1_head <- getd("gr1_head")
           #gr1_summary <- getd("gr1_summary")
           SummaryTab <- getd("SummaryTab")
+          SummaryTabFrame <- getd("SummaryTabFrame")
           xtmp <- ActiveSdcObject()@manipKeyVars
           var <- xtmp[,v]
           if(isExtant(SummaryTab[[index]])){
             #svalue(gr1_head[[index]]) <- capture.output(print(head(var)),append=FALSE)
             Supdate <- t(as.data.frame(table(var)))
-            SummaryTab[[index]][,1:ncol(Supdate)] <- Supdate
-            if(ncol(SummaryTab[[index]][,])>ncol(Supdate)){
-              ind <- (ncol(Supdate)+1):ncol(SummaryTab[[index]][,])
-              SummaryTab[[index]][1,ind] <- rep("",length(ind))
-              SummaryTab[[index]][2,ind] <- rep("",length(ind))
-              names(SummaryTab[[index]])[ind] <- rep("I",length(ind ))
-            }
+            colnames(Supdate) <- paste("Cat",1:ncol(Supdate),sep="")
+            delete(SummaryTabFrame[[index]],SummaryTab[[index]])
+            SummaryTab[[index]] <- gtable(Supdate,container=SummaryTabFrame[[index]])
+            size(SummaryTab[[index]]) <- c(800,100)
+            putd("SummaryTab",SummaryTab)
+#            SummaryTab[[index]][,1:ncol(Supdate)] <- Supdate
+#            if(ncol(SummaryTab[[index]][,])>ncol(Supdate)){
+#              ind <- (ncol(Supdate)+1):ncol(SummaryTab[[index]][,])
+#              SummaryTab[[index]][1,ind] <- rep("",length(ind))
+#              SummaryTab[[index]][2,ind] <- rep("",length(ind))
+#              names(SummaryTab[[index]])[ind] <- rep("I",length(ind ))
+#            }
             #names(SummaryTab[[index]]) <- colnames(dd_summary)
             #svalue(gr1_summary[[index]]) <- capture.output(print(summary(var)),append=FALSE)
           }
           dev.set(getd("gdev")[[index]])
           if(is.factor(var)){
-            try(plot(var,main=v),silent=TRUE)
+            try(plot(var,main=v,xlab="Levels",ylab="Frequency"),silent=TRUE)
           }else if(is.numeric(var)){
-            try(hist(var,main=v),silent=TRUE)
+            try(hist(var,main=v,xlab="Levels",ylab="Frequency"),silent=TRUE)
           }
           keyname <- ActiveSdcVarsStr()
           varmoslist <- keyname[unlist(lapply(keyname,function(x)is.factor(xtmp[,x])))]
@@ -1402,6 +1411,7 @@ sdcGUI <- function() {
           #gr1_head <- getd("gr1_head")
           #gr1_summary <- getd("gr1_summary")
           SummaryTab <- getd("SummaryTab")
+          SummaryTabFrame <- getd("SummaryTabFrame")
           xtmp <- ActiveSdcObject()@manipKeyVars
           for(index in indexAllKeys){
             v <- ActiveSdcVarsStr()[index]
@@ -1409,21 +1419,26 @@ sdcGUI <- function() {
             if(isExtant(SummaryTab[[index]])){
               #svalue(gr1_head[[index]]) <- capture.output(print(head(var)),append=FALSE)
               Supdate <- t(as.data.frame(table(var)))
-              SummaryTab[[index]][,1:ncol(Supdate)] <- Supdate
-              if(ncol(SummaryTab[[index]][,])>ncol(Supdate)){
-                ind <- (ncol(Supdate)+1):ncol(SummaryTab[[index]][,])
-                SummaryTab[[index]][1,ind] <- rep("",length(ind))
-                SummaryTab[[index]][2,ind] <- rep("",length(ind))
-                names(SummaryTab[[index]])[ind] <- rep("I",length(ind ))
-              }
+              colnames(Supdate) <- paste("Cat",1:ncol(Supdate),sep="")
+              delete(SummaryTabFrame[[index]],SummaryTab[[index]])
+              SummaryTab[[index]] <- gtable(Supdate,container=SummaryTabFrame[[index]])
+              size(SummaryTab[[index]]) <- c(800,100)
+              putd("SummaryTab",SummaryTab)
+#              SummaryTab[[index]][,1:ncol(Supdate)] <- Supdate
+#              if(ncol(SummaryTab[[index]][,])>ncol(Supdate)){
+#                ind <- (ncol(Supdate)+1):ncol(SummaryTab[[index]][,])
+#                SummaryTab[[index]][1,ind] <- rep("",length(ind))
+#                SummaryTab[[index]][2,ind] <- rep("",length(ind))
+#                names(SummaryTab[[index]])[ind] <- rep("I",length(ind ))
+#              }
               #names(SummaryTab[[index]]) <- colnames(dd_summary)
               #svalue(gr1_summary[[index]]) <- capture.output(print(summary(var)),append=FALSE)
             }
             dev.set(getd("gdev")[[index]])
             if(is.factor(var)){
-              try(plot(var,main=v),silent=TRUE)
+              try(plot(var,main=v,xlab="Levels",ylab="Frequency"),silent=TRUE)
             }else if(is.numeric(var)){
-              try(hist(var,main=v),silent=TRUE)
+              try(hist(var,main=v,xlab="Levels",ylab="Frequency"),silent=TRUE)
             }
           }
           keyname <- ActiveSdcVarsStr()
@@ -1480,21 +1495,36 @@ sdcGUI <- function() {
       enabled(gr3_windowButton1[[i]]) <- FALSE
       enabled(gr3_windowButton2[[i]]) <- FALSE
     }
+    updateLevels <- function(){
+      keyname <- ActiveSdcVarsStr()
+      rb <- getd("rb")
+      for(k in seq_along(keyname)){
+        if(is.factor(ActiveSdcObject()@manipKeyVars[,k])){
+          svalue(rb[[k]]) <- "Factor"
+          showLevels(keyname[k])
+        }else{
+          hideLevels(keyname[k])
+          svalue(rb[[k]]) <- "Numeric"
+        }
+      }
+      
+    }
     keyname <- ActiveSdcVarsStr()
     gr1_window = gwindow("Choose parameters for globalRecode", width=1100, parent=window)
     gr1_main <-  gframe("", container=gr1_window, horizontal=FALSE)
     undogr <- ggroup(container=gr1_main)
-    undobt <- gbutton("Undo last action",handler=function(h,...){OneStepBack();updateSummary()},container=undogr)
+    undobt <- gbutton("Undo last action",handler=function(h,...){OneStepBack();updateSummary();updateLevels()},container=undogr)
     tooltip(undobt) <- "Undo is only possible for one step and data sets with less than 100 000 rows."
     nb <- gnotebook(container=gr1_main, closebuttons=FALSE)
     #Main
     xtmp <- ActiveSdcObject()@manipKeyVars
     groupFacVarFun <- renameFacVarFun <- gdev <- recFactorFun <- breaksInput <- labelsInput <- list()
     #facTab <- gr3_windowButton1 <- gr3_windowButton2 <- recButton2 <- rb <- gr1_head <- gr1_summary <- rbfun <- list()
-    facTab <- gr3_windowButton1 <- gr3_windowButton2 <- recButton2 <- rb <- SummaryTab <- rbfun <- list()
+    facTab <- gr3_windowButton1 <- gr3_windowButton2 <- recButton2 <- rb <- GraphFrame <- SummaryTab <- SummaryTabFrame <- rbfun <- list()
     for(i in 1:length(keyname)){
       #Main
       tmp <- ggroup(horizontal=FALSE, container=nb,label=keyname[i],expand=FALSE)
+      svalue(nb) <- 1
       tmp1 <- gframe(text='<span weight="bold" size="medium">Type:</span>',
           horizonal=FALSE,container=tmp,markup=TRUE)
       #glabel("Type:",container=tmp)
@@ -1520,7 +1550,7 @@ sdcGUI <- function() {
       
       #glabel("Head:",container=tmp)
       #gr1_head[[i]] <- gtext("", container=tmp, height=50, width=250)
-      tmp1 <- gframe(text='<span weight="bold" size="medium">Frequencies:</span>',
+      SummaryTabFrame[[i]] <- gframe(text='<span weight="bold" size="medium">Frequencies:</span>',
           horizonal=FALSE,container=tmp,markup=TRUE)
       #glabel("Frequencies:",container=tmp1)
       dd_summary <- t(as.data.frame(table(xtmp[,keyname[i]])))
@@ -1530,7 +1560,7 @@ sdcGUI <- function() {
       colnames(Supdate) <- paste("Cat",1:ncol(Supdate),sep="")
       SummaryTab[[i]] <- gtable(Supdate)
       size(SummaryTab[[i]]) <- c(800,100)
-      add(tmp1, SummaryTab[[i]])
+      add(SummaryTabFrame[[i]], SummaryTab[[i]])
       #putd("SummaryTab",SummaryTab[[i]])
       
       #gr1_summary[[i]] <- gtext("", container=tmp, height=50, width=250)
@@ -1667,11 +1697,8 @@ sdcGUI <- function() {
       gr3_windowButtonGroup = ggroup(container=tmpGroupFac)
       addSpring(gr3_windowButtonGroup)
       #Graphics Fenser
-      tmpGraph <-  gframe('<span weight="bold" size="medium">Plot</span>',
+      GraphFrame[[i]] <-  gframe('<span weight="bold" size="medium">Plot</span>',
           container=tmp2, horizontal=FALSE,markup=TRUE)
-      ggraphics(container=tmpGraph)
-      gdev[[i]] <- dev.cur()
-      
       ##Main
       if(is.factor(xtmp[,keyname[i]])){
         svalue(rb[[i]]) <- "Factor"
@@ -1690,7 +1717,8 @@ sdcGUI <- function() {
     #putd("gr1_head",gr1_head)
     #putd("gr1_summary",gr1_summary)
     putd("SummaryTab",SummaryTab)
-    putd("gdev",gdev)
+    putd("SummaryTabFrame",SummaryTabFrame)
+    
     
     #Insert Levels in List for Factor variables
     for(i in 1:length(keyname)){
@@ -1712,6 +1740,7 @@ sdcGUI <- function() {
     }
     #Frequencies Tab
     FreqTT <- ggroup(horizontal=FALSE, container=nb,label="Frequencies")
+    svalue(nb) <- 1
     FreqTT_1 <- gframe('<span weight="bold" size="medium">Information on observations violating 3-anonymity</span>',
         container=FreqTT,markup=TRUE)
     ffc_print = gtext(container=FreqTT_1,text="", width=900, height=150)
@@ -1747,15 +1776,22 @@ sdcGUI <- function() {
     gbutton("Help ", container=okCancelGroup, handler=function(h,...) helpR("globalRecode") )
     
     #Plot ausfuehren
-    for(i in 1:length(keyname)){
+    for(i in length(keyname):1){
+      ggraphics(container=GraphFrame[[i]],width=500,heigth=500)
+      svalue(nb) <- i
+      gdev[[i]] <- dev.cur()
+    }
+    for(i in length(keyname):1){
       dev.set(gdev[[i]])
       var <- xtmp[,keyname[i]]
       if(is.factor(var)){
-        plot(var,main=keyname[i])
+        try(plot(var,main=keyname[i],xlab="Levels",ylab="Frequency"),silent=TRUE)
       }else if(is.numeric(var)){
-        hist(var,main=keyname[i])
+        try(hist(var,main=keyname[i],xlab="Levels",ylab="Frequency"),silent=TRUE)
       }
     }
+    putd("gdev",gdev)
+    svalue(nb) <- 1
   }
   
   removeDirectID_tmp <- function(var){
@@ -1997,7 +2033,7 @@ sdcGUI <- function() {
     p1_windowGroup = ggroup(container=nb, horizontal=FALSE,label="Function")
     #Help
     t <- gtext(container=nb, label="Help ", expand=TRUE)
-    l <- .findHelpPage("pram_strata", "sdcMicro")
+    l <- .findHelpPage("pram", "sdcMicro")
     x <- l$x
     .insertHelpPage(t, x)
     svalue(nb) <- 1
@@ -2057,8 +2093,8 @@ sdcGUI <- function() {
           } else {
             if(any(selTab[]%in%keyVars))
               TFKey <- gconfirm("If a key variable is selected for pram, the risk and frequency
-calculations are not valid anymore. Are you sure you want to pursue with this action?",
-              title="Warning", icon="warn", parent=p1_window)
+                      calculations are not valid anymore. Are you sure you want to pursue with this action?",
+                  title="Warning", icon="warn", parent=p1_window)
             else
               TFKey <- TRUE
             if(TFKey){ 
@@ -2066,7 +2102,7 @@ calculations are not valid anymore. Are you sure you want to pursue with this ac
               svar <- sTab[]
               if(length(svar)==0) svar <- NULL
               pram_tmp(var, svar)
-            
+              
               dispose(p1_window)
               enabled(pram_button2) <- TRUE
               viewpram1()
@@ -2075,7 +2111,7 @@ calculations are not valid anymore. Are you sure you want to pursue with this ac
           } 
         })
     gbutton("Cancel ", container=p1_windowButtonGroup, handler=function(h,...) { dispose(p1_window) })
-    gbutton("Help ", container=p1_windowButtonGroup, handler=function(h,...) { helpR("pram_strata") })
+    gbutton("Help ", container=p1_windowButtonGroup, handler=function(h,...) { helpR("pram") })
   }  
   viewpram1 <- function(...){
     p1_window = gwindow("Pram", width=230, parent=window)
@@ -2084,7 +2120,7 @@ calculations are not valid anymore. Are you sure you want to pursue with this ac
     p1_windowGroup = ggroup(container=nb, horizontal=FALSE,label="Function")
     #Help
     t <- gtext(container=nb, label="Help ", expand=TRUE)
-    l <- .findHelpPage("pram_strata", "sdcMicro")
+    l <- .findHelpPage("pram", "sdcMicro")
     x <- l$x
     .insertHelpPage(t, x)
     svalue(nb) <- 1
@@ -2098,7 +2134,7 @@ calculations are not valid anymore. Are you sure you want to pursue with this ac
     
     
     gbutton("Close", container=p1_windowGroup, handler=function(h,...) { dispose(p1_window) })
-    gbutton("Help ", container=p1_windowGroup, handler=function(h,...) { helpR("pram_strata") })
+    gbutton("Help ", container=p1_windowGroup, handler=function(h,...) { helpR("pram") })
   }
   # function for gr_button2
   # opens script window to execute R commands directly
@@ -2198,22 +2234,22 @@ calculations are not valid anymore. Are you sure you want to pursue with this ac
       #if(!identical(svalue(nm_risk_slider1),optionss$risk_k)|!identical(svalue(nm_risk_slider2),optionss$risk_k2)){
       #  optionss$risk_k <- svalue(nm_risk_slider1)
       #  optionss$risk_k2 <- svalue(nm_risk_slider2)
-        obj <- ActiveSdcObject()
+      obj <- ActiveSdcObject()
       #  obj@options <- optionss
-        ActiveSdcObject(dUtility(dRisk(obj)))
+      ActiveSdcObject(dUtility(dRisk(obj)))
       #}
       
       risk <- ActiveSdcVars("risk")
       originalRisk <- ActiveSdcVars("originalRisk")
       utility <- ActiveSdcVars("utility")
-    
+      
       svalue(nm_risk_print) <- paste("Disclosure Risk is between: \n [0% ; ", 
-			  round(100*risk$numeric,2), "%] (current)\n 
-				(orig: [0 %,", 100, "%]) \n",sep="")
-
-svalue(nm_util_print) <- paste("- Information Loss:\n    IL1: ", 
-		round(utility$il1,2),"\n  - Difference Eigenvalues: ",round(utility$eigen*100,2)," %",
-    "\n\n (orig: Information Loss: 0) \n",sep="")
+          round(100*risk$numeric,2), "%] (current)\n 
+              (orig: [0 %,", 100, "%]) \n",sep="")
+      
+      svalue(nm_util_print) <- paste("- Information Loss:\n    IL1: ", 
+          round(utility$il1,2),"\n  - Difference Eigenvalues: ",round(utility$eigen*100,2)," %",
+          "\n\n (orig: Information Loss: 0) \n",sep="")
       dispose(xprogress)
     }
   }
@@ -2313,6 +2349,7 @@ svalue(nm_util_print) <- paste("- Information Loss:\n    IL1: ",
     #	numVars <- c(numVars, names(xtmp)[i])
     #}
     varTab = gtable(data.frame(vars=nsVars, stringsAsFactors=FALSE), multiple=TRUE)
+    putd("varTab_selVar",varTab)
     size(varTab) <- c(120,400)
     add(mtmp, varTab)
     
@@ -2368,7 +2405,7 @@ svalue(nm_util_print) <- paste("- Information Loss:\n    IL1: ",
     addSpring(btmp)
     gbutton(">>", container=btmp, handler=function(h,...) { ft(sTab, varTab, svalue(varTab), "sLen", 1) })
     gbutton("<<", container=btmp, handler=function(h,...) { ft(varTab, sTab, svalue(sTab), "sLen", 0) })
-    addSpring(btmp)
+    addSpring(btmp)    
     sTab = gtable(data.frame(vars=sVars, stringsAsFactors=FALSE), multiple=TRUE)
     size(sTab) <- c(120,100)
     add(tmp, sTab)
@@ -2380,9 +2417,8 @@ svalue(nm_util_print) <- paste("- Information Loss:\n    IL1: ",
     addSpring(selVar_windowButtonGroup)
     b1 <- gbutton("Generate Strata Variable", container=selVar_windowButtonGroup, handler=function(h,...) {
           #confirmSelection_tmp(catTab[], numTab[], wTab[],hTab[],sTab[])
-          confirmSelection_tmp(catTab[], numTab[], wTab[],hTab[],sTab[])    
-          dispose(selVar_window)
-          stVar_window = gwindow("Generate a strata variable", width=230, parent=window)
+          #confirmSelection_tmp(catTab[], numTab[], wTab[],hTab[],sTab[])    
+          stVar_window = gwindow("Generate a strata variable", width=230, parent=selVar_window)
           stVar_windowGroup = ggroup(container=stVar_window, horizontal=FALSE)
           stVar_main = ggroup(container=stVar_windowGroup)
           mtmp = ggroup(container=stVar_main)
@@ -2414,17 +2450,19 @@ svalue(nm_util_print) <- paste("- Information Loss:\n    IL1: ",
           gbutton("Ok", container=stVar_windowButtonGroup,
               handler=function(h,...) {
                 name <- "sdcMicroStrataVariable"
-                sVars <- sTab[]
+                sVars <- sTab[]                
                 if(length(sVars)==0)
                   gmessage("You have to select at least  one categoric variable to generate a strata variable.",
                       title="Information", icon="warning", parent=window)
                 else{
                   name <- paste(paste(sVars,collapse="_"),"_stratavar",sep="")
                   t1 <- paste("c(",paste("\"",sVars,"\"",sep="",collapse=","),")",sep="")
-                  Script.add(paste("generateStrata_tmp(", t1, ", \"",name,"\")",sep=""))
+                  Script.add(paste("activedataset <- generateStrata(activedataset,", t1, ", \"",name,"\")",sep=""))
                   generateStrata_tmp(sVars,name)
                   dispose(stVar_window)
-                  selVar()
+                  varTab_selVar=getd("varTab_selVar")
+                  varTab_selVar[,] <- c(varTab_selVar[,],name)
+                  
                 }
                 
               })
@@ -2433,7 +2471,7 @@ svalue(nm_util_print) <- paste("- Information Loss:\n    IL1: ",
         })
     tooltip(b1) <- tt_genstrat 
     gbutton("Ok", container=selVar_windowButtonGroup,
-        handler=function(h,...) {
+        handler=function(h,...) {          
           # check if firstrun - if not reset script and dataset to original one
           #cat(paste(getd("keyLen"), getd("numLen"), getd("wLen"), getd("hLen"), "\n"))
           fr_do <- TRUE
@@ -2459,7 +2497,8 @@ svalue(nm_util_print) <- paste("- Information Loss:\n    IL1: ",
           # check if enough is selected
           if( fr_do ) {
             # min selection must be 1 in each category
-            if( ((getd("keyLen")>=1  || getd("numLen")>=1))&&getd("wLen")%in%c(0,1)&&getd("hLen")%in%c(0,1)) {
+            #if( ((getd("keyLen")>=1 || getd("numLen")>=1))&&getd("wLen")%in%c(0,1)&&getd("hLen")%in%c(0,1)) {
+            if( getd("keyLen")>=1 &&getd("wLen")%in%c(0,1)&&getd("hLen")%in%c(0,1) ) {
               keyVars <- catTab[]
               confirmSelection_tmp(catTab[], numTab[], wTab[],hTab[],sTab[])
               dispose(selVar_window)
@@ -2470,14 +2509,14 @@ svalue(nm_util_print) <- paste("- Information Loss:\n    IL1: ",
                   keynofac <- paste(keynofac,collapse=",")
                   
                   gmessage(paste("The variables ",keynofac," are selected as categoric but not recognized as being in the correct format.
-This can be confirmed or changed in the next window, you can reopen this window by clicking \"Recode\"",sep=""),
+                              This can be confirmed or changed in the next window, you can reopen this window by clicking \"Recode\"",sep=""),
                       title="Information", parent=window)
                   vc()
                 }
               }
             } else {
-              gmessage("You have to select at least  one numeric or categoric variable and optional one weight variable, one cluster ID variable and several strata variables.",
-                  title="Information", icon="warning", parent=window)
+              gmessage("You have to select at least categoric key variable and optionally one weight variable, one cluster ID variable and/or several strata variables.",
+                  title="Information", icon="warning", parent=window)              
             }
           }
         })
@@ -2488,94 +2527,94 @@ This can be confirmed or changed in the next window, you can reopen this window 
   # function for gb1 (confirm selection)
   # needed sub functions
   # TODO: done - save selection for script/history
-writeVars <- function(t1,t2,t3,t4,t5){
-  svalue(dslab) <- paste(getd("dataSetName")," [n=",nrow(ActiveDataSet()),"]",sep="")
-  enabled(gb1) <- TRUE
-  enabled(gb2) <- TRUE
-  if(length(t1)>0){
-    stmp <- ""
-    for( i in 1:length(t1) ) {
-      stmp <- paste(stmp,t1[i]," [#:",length(unique(ActiveDataSet()[,t1[i]])),"]\n",sep="")
-    } 
-    svalue(tab1) <- stmp
-    enabled(ir_button) <- TRUE
-    enabled(vk_button) <- TRUE
-    enabled(vh_button) <- TRUE
-    enabled(ls_button1) <- TRUE
-    enabled(ld_button1) <- TRUE
-    enabled(pram_button1) <- TRUE
-    #enabled(ls_button2) <- TRUE
-    enabled(vc_button1) <- TRUE
-    #enabled(gr_button2) <- TRUE
-  }else{
-    svalue(tab1) <- "not selected\n"
-    enabled(ir_button) <- FALSE
-    enabled(vk_button) <- FALSE
-    enabled(vh_button) <- FALSE
-    enabled(ls_button1) <- FALSE
-    enabled(ld_button1) <- FALSE
-    enabled(pram_button1) <- FALSE
-    #enabled(ls_button2) <- TRUE
-    enabled(vc_button1) <- FALSE
-    #enabled(gr_button2) <- FALSE
+  writeVars <- function(t1,t2,t3,t4,t5){
+    svalue(dslab) <- paste(getd("dataSetName")," [n=",nrow(ActiveDataSet()),"]",sep="")
+    enabled(gb1) <- TRUE
+    enabled(gb2) <- TRUE
+    if(length(t1)>0){
+      stmp <- ""
+      for( i in 1:length(t1) ) {
+        stmp <- paste(stmp,t1[i]," [#:",length(unique(ActiveDataSet()[,t1[i]])),"]\n",sep="")
+      } 
+      svalue(tab1) <- stmp
+      enabled(ir_button) <- TRUE
+      enabled(vk_button) <- TRUE
+      enabled(vh_button) <- TRUE
+      enabled(ls_button1) <- TRUE
+      enabled(ld_button1) <- TRUE
+      enabled(pram_button1) <- TRUE
+      #enabled(ls_button2) <- TRUE
+      enabled(vc_button1) <- TRUE
+      #enabled(gr_button2) <- TRUE
+    }else{
+      svalue(tab1) <- "not selected\n"
+      enabled(ir_button) <- FALSE
+      enabled(vk_button) <- FALSE
+      enabled(vh_button) <- FALSE
+      enabled(ls_button1) <- FALSE
+      enabled(ld_button1) <- FALSE
+      enabled(pram_button1) <- FALSE
+      #enabled(ls_button2) <- TRUE
+      enabled(vc_button1) <- FALSE
+      #enabled(gr_button2) <- FALSE
+    }
+    if(length(t2)>0){
+      stmp <- ""
+      for( i in 1:length(t2) ) {
+        mi <- round(min(ActiveDataSet()[,t2[i]],na.rm=TRUE),1)
+        ma <- round(max(ActiveDataSet()[,t2[i]],na.rm=TRUE),1)
+        me <- round(median(ActiveDataSet()[,t2[i]],na.rm=TRUE),1)
+        stmp <- paste(stmp, t2[i],"[Min:",mi,", Med:",me,", Max:",ma,"]\n")
+      }
+      svalue(tab2) <- stmp
+      enabled(nm_button1) <- TRUE
+      enabled(shuffle_button1) <- TRUE
+      enabled(nm_button2) <- TRUE
+      #enabled(nm_button3) <- TRUE
+      #enabled(nm_risk_slider1) <- TRUE
+      #enabled(nm_risk_slider2) <- TRUE
+    }else{
+      svalue(tab2) <- "not selected\n"
+      enabled(nm_button1) <- FALSE
+      enabled(shuffle_button1) <- FALSE
+      enabled(nm_button2) <- FALSE
+      #enabled(nm_button3) <- FALSE
+      #enabled(nm_risk_slider1) <- FALSE
+      #enabled(nm_risk_slider2) <- FALSE
+    }
+    if(length(t3)>0){
+      stmp <- ""
+      for( i in 1:length(t3) ) {
+        mi <- round(min(ActiveDataSet()[,t3[i]],na.rm=TRUE),1)
+        ma <- round(max(ActiveDataSet()[,t3[i]],na.rm=TRUE),1)
+        me <- round(median(ActiveDataSet()[,t3[i]],na.rm=TRUE),1)
+        stmp <- paste(stmp, t3[i]," [Min:",mi,", Med:",me,", Max:",ma,"]\n",sep="")
+      }
+      svalue(tab3) <- stmp
+    }else
+      svalue(tab3) <- "not selected\n"
+    if(length(t4)>0){
+      stmp <- ""
+      for( i in 1:length(t4) ) {
+        me <- round(mean(by(ActiveDataSet()[,t4[i]],ActiveDataSet()[,t4[i]],length),na.rm=TRUE),1)
+        stmp <- paste(stmp, t4[i]," [Mean size:",me,"]",sep="")
+      }
+      svalue(tab4) <- stmp
+    }else 
+      svalue(tab4) <- "not selected\n"
+    if(length(t5)>0){
+      stmp <- ""
+      for( i in 1:length(t5) ) {
+        stmp <- paste(stmp,t5[i]," [#:",length(unique(ActiveDataSet()[,t5[i]])),"]\n",sep="")
+      }
+      svalue(tab5) <- stmp
+    }else 
+      svalue(tab5) <- "not selected\n"
+    
+    # enable plot indivRisk button
+    freqCalcIndivRisk()
+    nm_risk_print_function()
   }
-  if(length(t2)>0){
-    stmp <- ""
-    for( i in 1:length(t2) ) {
-      mi <- round(min(ActiveDataSet()[,t2[i]],na.rm=TRUE),1)
-      ma <- round(max(ActiveDataSet()[,t2[i]],na.rm=TRUE),1)
-      me <- round(median(ActiveDataSet()[,t2[i]],na.rm=TRUE),1)
-      stmp <- paste(stmp, t2[i],"[Min:",mi,", Med:",me,", Max:",ma,"]\n")
-    }
-    svalue(tab2) <- stmp
-    enabled(nm_button1) <- TRUE
-    enabled(shuffle_button1) <- TRUE
-    enabled(nm_button2) <- TRUE
-    #enabled(nm_button3) <- TRUE
-    #enabled(nm_risk_slider1) <- TRUE
-    #enabled(nm_risk_slider2) <- TRUE
-  }else{
-    svalue(tab2) <- "not selected\n"
-    enabled(nm_button1) <- FALSE
-    enabled(shuffle_button1) <- FALSE
-    enabled(nm_button2) <- FALSE
-    #enabled(nm_button3) <- FALSE
-    #enabled(nm_risk_slider1) <- FALSE
-    #enabled(nm_risk_slider2) <- FALSE
-  }
-  if(length(t3)>0){
-    stmp <- ""
-    for( i in 1:length(t3) ) {
-      mi <- round(min(ActiveDataSet()[,t3[i]],na.rm=TRUE),1)
-      ma <- round(max(ActiveDataSet()[,t3[i]],na.rm=TRUE),1)
-      me <- round(median(ActiveDataSet()[,t3[i]],na.rm=TRUE),1)
-      stmp <- paste(stmp, t3[i]," [Min:",mi,", Med:",me,", Max:",ma,"]\n",sep="")
-    }
-    svalue(tab3) <- stmp
-  }else
-    svalue(tab3) <- "not selected\n"
-  if(length(t4)>0){
-    stmp <- ""
-    for( i in 1:length(t4) ) {
-      me <- round(mean(by(ActiveDataSet()[,t4[i]],ActiveDataSet()[,t4[i]],length),na.rm=TRUE),1)
-      stmp <- paste(stmp, t4[i]," [Mean size:",me,"]",sep="")
-    }
-    svalue(tab4) <- stmp
-  }else 
-    svalue(tab4) <- "not selected\n"
-  if(length(t5)>0){
-    stmp <- ""
-    for( i in 1:length(t5) ) {
-      stmp <- paste(stmp,t5[i]," [#:",length(unique(ActiveDataSet()[,t5[i]])),"]\n",sep="")
-    }
-    svalue(tab5) <- stmp
-  }else 
-    svalue(tab5) <- "not selected\n"
-  
-  # enable plot indivRisk button
-  freqCalcIndivRisk()
-  nm_risk_print_function()
-}
   confirmSelection_tmp <- function(t1=character(0), t2=character(0), t3=character(0),t4=character(0),t5=character(0)) {
     selvar <- vector()
     if(length(t1)>0)
@@ -3017,7 +3056,7 @@ writeVars <- function(t1,t2,t3,t4,t5){
       }
       else{
         ip <- list(fill=TRUE,
-            header=TRUE,
+            header=FALSE,
             strip.white=TRUE,
             stringsAsFactors=TRUE,
             blank.lines.skip=TRUE, 
@@ -3031,7 +3070,7 @@ writeVars <- function(t1,t2,t3,t4,t5){
       
       statusbar <- gstatusbar("")
       csvfilebutton <- gbutton("...", handler=buttonHandler)
-      csvheader <- gcheckbox("header", checked=ip$header)
+      csvheader <- gcheckbox("row names", checked=ip$header)
       csvseperator <- gedit(ip$sep)
       csvdecimal <- gedit(ip$dec)
       csvnastrings <- gedit(ip$na.strings)
@@ -3224,7 +3263,7 @@ writeVars <- function(t1,t2,t3,t4,t5){
                   putd("exportFileName", svalue(datafilename))
                   if(svalue(radio.html, index=TRUE)==2)
                     exportReport()
-                  },
+                },
                 error=function(e){gmessage(paste("There was a problem while exporting your data: '",e,"'"), "Problem",
                       icon="error")})
             dispose(importDialog)
@@ -3580,15 +3619,7 @@ writeVars <- function(t1,t2,t3,t4,t5){
     if(existd("sdcObject")){
       reportDialog <- gwindow("Generate Report", parent=window, width=400, height=300)
       reportDialogG <- ggroup(container=reportDialog, horizontal=FALSE)
-      #pramRadio <- gcheckbox("Pram", checked=TRUE)
-      #kAnonRadio <- gcheckbox("k-Anonymity", checked=TRUE)
-      #indivRiskRadio <- gcheckbox("Individual Risk", checked=TRUE)
-      #hierRiskRadio <- gcheckbox("Hierachical Risk", checked=TRUE)
-      #riskNumKeyVarsRadio <- gcheckbox("Risk of Numerical Key Variables", checked=TRUE)
-      #dataUtilityRadio <- gcheckbox("Data Utility", checked=TRUE)
-      #localSuppsRadio <- gcheckbox("Local Supression", checked=TRUE)
-      #dataUtilityContRadio <- gcheckbox("Data Utility Cont", checked=TRUE)
-      #sessionInfoRadio <- gcheckbox("R Session Info", checked=TRUE)
+      
       repTitle <- gedit(width=100)
       repType <- gradio(c("internal (detailled) report","external (overview) report"), horizontal=TRUE)
       svalue(repTitle) <- "SDC-Report"
@@ -3596,18 +3627,9 @@ writeVars <- function(t1,t2,t3,t4,t5){
       add(reportDialogTitleFrame,repTitle)
       reportDialogFrame <- gframe("Report Type:", container=reportDialogG, horizontal=FALSE)
       add(reportDialogFrame,repType)
-      #add(reportDialogFrame,pramRadio)
-      #add(reportDialogFrame,kAnonRadio)
-      #add(reportDialogFrame,indivRiskRadio)
-      #add(reportDialogFrame,hierRiskRadio)
-      #add(reportDialogFrame,riskNumKeyVarsRadio)
-      #add(reportDialogFrame,dataUtilityRadio)
-      #add(reportDialogFrame,localSuppsRadio)
-      #add(reportDialogFrame,dataUtilityContRadio)
-      #add(reportDialogFrame,sessionInfoRadio)
+      
       reportDialogOutFrame <- gframe("Output Type:", container=reportDialogG, horizontal=FALSE)
-      outputRadio <- gradio(c("HTML", "LATEX", "TEXT"), 
-          horizontal=TRUE, container=reportDialogOutFrame)
+      outputRadio <- gradio(c("HTML", "LATEX", "TEXT"), horizontal=TRUE, container=reportDialogOutFrame)
       okbutton <- gbutton("OK", container=reportDialogG, handler=function(h,...){
             obj <- ActiveSdcObject()
             obj@options$cmd <- getd("activeScript")$cmd
@@ -3626,43 +3648,21 @@ writeVars <- function(t1,t2,t3,t4,t5){
             }
             outdir <- dirname(exportFileName)
             filename <- strsplit(basename(exportFileName),"\\.")[[1]][1]
-            if(svalue(outputRadio)=="LATEX") {
-              filename <- paste(filename,".tex",sep="")
-            }
-            if (svalue(outputRadio)=="HTML") {
-              filename <- paste(filename,".html",sep="")
-            }
-            if (svalue(outputRadio)=="TEXT") {
-              filename <- paste(filename,".txt",sep="")
-            }
-
-            #report(obj
-            #  pram=svalue(pramRadio),
-            #  kAnon=svalue(kAnonRadio),
-            #  indivRisk=svalue(indivRiskRadio),
-            #  hierRisk=svalue(hierRiskRadio),
-            #  riskNumKeyVars=svalue(riskNumKeyVarsRadio),
-            #  dataUtility=svalue(dataUtilityRadio),
-            #  localSupps=svalue(localSuppsRadio),
-            #  dataUtilityCont=svalue(dataUtilityContRadio),
-            #  sessionInfo=svalue(sessionInfoRadio),outdir=outdir,filename=filename,title=svalue(repTitle),
-            #  format=svalue(outputRadio))
+            
             internal <- FALSE
             if ( svalue(repType, index=TRUE) == 1 ) {
-               internal <- TRUE
+              internal <- TRUE
             }
             report(
-              obj, 
-              outdir=outdir,
-              filename=filename,
-              format=svalue(outputRadio),
-              title=svalue(repTitle),
-              internal=internal
+                obj, 
+                outdir=outdir,
+                filename=filename,
+                format=svalue(outputRadio),
+                title=svalue(repTitle),
+                internal=internal
             )
             dispose(reportDialog)
-          })
-      
-      
+          })      
     }else{
       gmessage("No sdc object found to generate report.", title="Information", icon="warning", parent=window)
     }
@@ -3823,7 +3823,7 @@ writeVars <- function(t1,t2,t3,t4,t5){
         }
       }else
         gmessage("Undo is not possible, because no previous sdc object was found.\n (Undo is only possible for one step and data sets with less than 100 000 rows.)", title="Attention", icon="error", parent=window)
-  }else
+    }else
       gmessage("Undo is not possible, because no active sdc object was found.\n (Undo is only possible for one step and data sets with less than 100 000 rows.)", title="Attention", icon="error", parent=window)
   }
   restartGUI <- function(...) {
@@ -3892,7 +3892,7 @@ writeVars <- function(t1,t2,t3,t4,t5){
   mbar$Help$"SDC Guidelines"$handler = vign2
   mbar$Help$"R sdcMicro Help Files"$"Risk (categorical)"$handler=function(...)helpR("measure_risk")
   mbar$Help$"R sdcMicro Help Files"$"Global Recode"$handler=function(...)helpR("globalRecode")
-  mbar$Help$"R sdcMicro Help Files"$"Pram"$handler=function(...)helpR("pram_strata")
+  mbar$Help$"R sdcMicro Help Files"$"Pram"$handler=function(...)helpR("pram")
   mbar$Help$"R sdcMicro Help Files"$"Local Supression (optimal - k-Anonymity)"$handler=function(...)helpR("localSuppression")
   mbar$Help$"R sdcMicro Help Files"$"Local Supression (threshold - indiv.risk)"$handler=function(...)helpR("localSupp")
   mbar$Help$"R sdcMicro Help Files"$"Risk (continuous)"$handler=function(...)helpR("dRisk")
@@ -3950,7 +3950,7 @@ writeVars <- function(t1,t2,t3,t4,t5){
   addSpace(tmp, 1)
   tmpNum = gframe('<span weight="bold" size="medium">Numerical key variables</span>',
       container=tmp, horizontal=FALSE,markup=TRUE)
-   tab2 <- glabel("not selected\n")#numerical info
+  tab2 <- glabel("not selected\n")#numerical info
   tooltip(tab2) <- tt_selVar
   add(tmpNum, tab2, expand=TRUE)
   addSpace(mtmp, 4,horizontal=FALSE)
@@ -3969,18 +3969,18 @@ writeVars <- function(t1,t2,t3,t4,t5){
   add(tmpHH, tab4, expand=TRUE)
   addSpace(tmp, 1)
   tmpSt = gframe('<span weight="bold" size="medium">Strata variable</span>',
-          container=tmp, horizontal=FALSE,markup=TRUE)
+      container=tmp, horizontal=FALSE,markup=TRUE)
   tab5 <- glabel("not selected\n")#strata info
   tooltip(tab5) <- tt_selVar
   add(tmpSt, tab5, expand=TRUE)
   
-
+  
   
   # End - variable Selection Container
   # Start - Categorical Container
- 
- 
- 
+  
+  
+  
   tmpCR = gframe('<span foreground="blue" size="x-large" weight="bold">Risk</span>', container=mainGroupCat, horizontal=FALSE,markup=TRUE)
   tmpCP = gframe('<span foreground="blue" size="x-large" weight="bold">Protection</span>', container=mainGroupCat, horizontal=FALSE,markup=TRUE)
   tmpCU = gframe('<span foreground="blue" size="x-large" weight="bold">Information Loss</span>', container=mainGroupCat, horizontal=FALSE,markup=TRUE)
@@ -3999,19 +3999,19 @@ writeVars <- function(t1,t2,t3,t4,t5){
   vk_button = gbutton("View Observations violating 3-anonymity", container=vkGroupButton,
       handler=function(h, ...) viewkanon())
   enabled(vk_button) <- FALSE
-   
+  
   
   ir_tmp = gframe('<span size="medium" weight="bold">Risk for categorical key variables</span>',
       container=tmpCR, horizontal=FALSE,markup=TRUE)
   ir_print = gtext(text="", width=280, height=190)
   tooltip(ir_print)<- tt_ir
   add(ir_tmp, ir_print)
-
+  
   vh_button = gbutton("View observations with risk above the benchmark", container=ir_tmp,
       handler=function(h, ...) viewhigh())
   enabled(vh_button) <- FALSE
   tooltip(vh_button) <- "Show 20 observations with highest risk"
-
+  
   # Start - l-Diversity Container
   ld_button1 = gbutton("l-Diversity",
       handler=function(h,...) ldiv1() )
@@ -4021,10 +4021,10 @@ writeVars <- function(t1,t2,t3,t4,t5){
   
   tmp = gframe('<span size="medium" weight="bold">Recodings</span>', container=tmpCU,markup=TRUE,horizontal=FALSE)
   glabel('<span background="#ffffff">For each variable, the following key figures are computed:
-  the number of categories 
-  the mean size of the groups 
-  the size of smallest group.
-  Original values in brackets.</span>',markup=TRUE,container=tmp)
+          the number of categories 
+          the mean size of the groups 
+          the size of smallest group.
+          Original values in brackets.</span>',markup=TRUE,container=tmp)
   
   recode_summary <- gtable(returnRecode()) 
   size(recode_summary) <- c(240,260)      
@@ -4069,7 +4069,7 @@ writeVars <- function(t1,t2,t3,t4,t5){
   add(tmpCP, ir_button)
   tooltip(ir_button) <- tt_pir
   enabled(ir_button) <- FALSE
-
+  
   pram_button2 = gbutton("View pram output",
       handler=function(h,...) viewpram1() )
   add(tmpCP, pram_button2)
@@ -4102,7 +4102,7 @@ writeVars <- function(t1,t2,t3,t4,t5){
   add(tmpP, nm_button1)
   enabled(nm_button1) <- FALSE
   
-
+  
   
   shuffle_button1 = gbutton("Shuffling", handler=function(h,...) shuffle1() )
   tooltip(shuffle_button1) <- tt_shuffle
